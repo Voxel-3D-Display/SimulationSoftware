@@ -1,11 +1,6 @@
 import pygame
 import time
-import sys
 import os
-cwd = os.getcwd()
-sys.path.append("../")
-from voxel_utils import *
-os.chdir(cwd)
 
 pygame.init()
 
@@ -39,6 +34,7 @@ while not crashed:
 
     img = pygame.image.load(os.path.join('TestClock/', str(i).zfill(5) + '.bmp'))
     pi_display.blit(img, (0, 0))
+    del img
 
     pygame.display.update()
 
