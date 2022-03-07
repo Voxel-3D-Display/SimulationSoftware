@@ -1,6 +1,7 @@
 import pygame
 import time
 import os
+import sys
 
 
 def display_images_standard():
@@ -69,12 +70,16 @@ print("Pygame initialized")
 
 display_width = 1920
 display_height = 1080
-total_images = 3
-directory = 'ColorsEnumerated/'
+total_images = 10
+directory = 'home/pi/Desktop/SimulationSoftware/Testing/StaticTest/'
+#directory = 'StaticTest/'
 
 pi_display = pygame.display.set_mode((display_width, display_height), pygame.FULLSCREEN)
+pygame.mouse.set_visible(False)
 
-display_images_standard()
+print("Running Image Viewer")
+display_images_preload()
 
+print("Received escape sequence: quitting")
 pygame.quit()
 quit()

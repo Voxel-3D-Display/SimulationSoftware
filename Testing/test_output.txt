@@ -1,0 +1,14 @@
+pygame 1.9.6
+Hello from the pygame community. https://www.pygame.org/contribute.html
+Pygame initialized
+Running Image Viewer
+Framerate = 0.615935507973393
+Framerate = 2.301336053861347
+Framerate = 2.6479468941053135
+Framerate = 2.795130598833759
+Framerate = 2.8772168594420964
+Framerate = 2.929939747281393
+Framerate = 2.9656881808967186
+Framerate = 2.9943461421958446
+Framerate = 3.013620878198795
+Received escape sequence: quitting
