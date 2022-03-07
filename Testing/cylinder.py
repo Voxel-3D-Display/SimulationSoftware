@@ -82,8 +82,8 @@ class Visualizer(object):
                 self.w.addItem(self.traces[i])
                 i += 1
 
-        os.system("rm *-cylinder.png")
-        self.savepng()
+        # os.system("rm *-cylinder.png")
+        # self.savepng()
 
 
     def start(self):
@@ -130,7 +130,7 @@ class Visualizer(object):
                 self.traces[i].setData(pos=points.T, color=colors.T)
                 i += 1
         print("update")
-        self.savepng()
+        # self.savepng()
 
 
     def animation(self):
