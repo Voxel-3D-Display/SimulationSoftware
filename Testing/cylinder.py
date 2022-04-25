@@ -9,7 +9,12 @@ import pyqtgraph.opengl as gl
 import pyqtgraph as pg
 import numpy as np
 import sys
+import struct
 
+NEXT_FRAME = struct.pack('1B', 0xFF)
+NEXT_SLICE = struct.pack('1B', 0xFE)
+FRAMERATE = 15000
+NUM_SLICES = 360
 
 class Visualizer(object):
     def __init__(self):
@@ -26,13 +31,16 @@ class Visualizer(object):
 
         self.height = 30
         self.width  = 48
+        # self.height = 10
+        # self.width  = 16
         
         self.image_index = 0
-        self.image_max = 30
+        self.image_max = 65
 
-        self.dpu = 2
+        self.dpu = 1
         self.rpu = self.dpu * np.pi / 180
-        self.r = np.arange(-self.width/2, self.width/2)
+        self.r = np.arange(-self.width/2, self.width/2) + 0.5
+        print(self.r)
         self.t = np.arange(-np.pi, np.pi, self.rpu)
         # self.t = np.arange(0, self.rpu, self.rpu)
         self.z = np.arange(self.height)
@@ -62,8 +70,8 @@ class Visualizer(object):
         gy.translate(0, 0, self.height/2)
         self.w.addItem(gy)
 
-        self.u = 1
-        self.d = 1
+        self.u = 0
+        self.d = 0.05
 
         i = 0
         for t in self.t:
@@ -81,10 +89,24 @@ class Visualizer(object):
                 )
                 self.w.addItem(self.traces[i])
                 i += 1
+        
+        self.prev_closest_zind_arr = np.zeros_like(self.r)
 
         os.system("rm *-cylinder.png")
         self.savepng()
-
+        self.file = open("cylinder.bin", "wb")
+        self.file.write(struct.pack('H', int(NUM_SLICES)))
+        self.file.write(struct.pack('H', int(FRAMERATE)))
+        self.file.write(NEXT_FRAME)
+        for slice in range(NUM_SLICES) :
+            self.file.write(NEXT_SLICE)
+            for r_res in self.r :
+                for z_res in self.z :
+                    self.file.write(struct.pack('1B', int(self.height - z_res - 1)))
+                    self.file.write(struct.pack('1B', int(r_res + 23.5)))
+                    self.file.write(struct.pack('1B', int(0x00)))
+                    self.file.write(struct.pack('1B', int(0x00)))
+                    self.file.write(struct.pack('1B', int(0x00)))
 
     def start(self):
         if (sys.flags.interactive != 1) or not hasattr(QtCore, 'PYQT_VERSION'):
@@ -99,23 +121,51 @@ class Visualizer(object):
         if self.image_index > self.image_max :
             print('hi')
             self.timer.stop()
+            self.file.close()
             os.system("ffmpeg -f image2 -r 15 -i out/%05d-cylinder.png -vcodec mpeg4 -y cylinder.mp4")
 
     def update(self):
         self.u += self.d
-        if self.u > 10 :
-            self.d *= -1
-            self.u = 10
-        elif self.u < 0.1 :
-            self.d *= -1
-            self.u = 0.1
+        # if self.u > 10 :
+        #     self.d *= -1
+        #     self.u = 10
+        # elif self.u < 0 :
+        #     self.d *= -1
+        #     self.u = 0
+
+        s = 2
 
         sinc = np.zeros((self.z.shape[0], self.r.shape[0]))
-        zval = 100 * np.sin(0.01*np.pi*self.r) / self.r
+        zval = 0.5 * s * self.height * \
+                ((np.cos(10*np.abs(2*self.r/self.width) - 2*np.pi*self.u))*np.exp(-self.u) \
+                / (10*np.abs(2*self.r/self.width) + s) + 1/s)
+        # zval = 0.5 * self.height * \
+        #         ((np.sin(10*np.pi*np.abs(self.r / self.width) - 2*np.pi*self.u)) \
+        #         / (10*np.abs(self.r / self.width) + self.height/10) + 1)
         print(zval)
+
+        self.file.write(NEXT_FRAME)
+        closest_zind_arr = np.empty_like(self.r)
         for rind in range(len(self.r)) :
             closest_zind = np.argmin(np.abs(self.z - zval[rind]))
+            closest_zind_arr[rind] = closest_zind
             sinc[closest_zind, rind] = 1
+        for slice in range(NUM_SLICES) :
+            self.file.write(NEXT_SLICE)
+            for rind in range(len(self.r)) :
+                self.file.write(struct.pack('1B', int(self.height - self.prev_closest_zind_arr[rind] - 1)))
+                self.file.write(struct.pack('1B', int(self.r[rind] + 23.5)))
+                self.file.write(struct.pack('1B', int(0x00)))
+                self.file.write(struct.pack('1B', int(0x00)))
+                self.file.write(struct.pack('1B', int(0x00)))
+
+                self.file.write(struct.pack('1B', int(self.height - closest_zind_arr[rind] - 1)))
+                self.file.write(struct.pack('1B', int(self.r[rind] + 23.5)))
+                self.file.write(struct.pack('1B', int(0xFF)))
+                self.file.write(struct.pack('1B', int(0xFF)))
+                self.file.write(struct.pack('1B', int(0xFF)))
+        
+        self.prev_closest_zind_arr = closest_zind_arr
 
         i = 0
         for t in self.t:
@@ -129,12 +179,12 @@ class Visualizer(object):
                 colors = np.vstack((color, color, color, np.ones_like(color)))
                 self.traces[i].setData(pos=points.T, color=colors.T)
                 i += 1
-        print("update")
         self.savepng()
+        print("update %d" % self.image_index)
 
 
     def animation(self):
-        self.timer.start(20)
+        self.timer.start(15)
         self.start()
 
 
