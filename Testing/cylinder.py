@@ -182,7 +182,6 @@ class Visualizer(object):
         self.savepng()
         print("update %d" % self.image_index)
 
-
     def animation(self):
         self.timer.start(15)
         self.start()
