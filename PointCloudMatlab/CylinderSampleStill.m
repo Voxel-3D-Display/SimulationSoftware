@@ -13,7 +13,7 @@ FRAMERATE = 15000;
 NEXT_FRAME = uint8(0xFF);
 NEXT_SLICE = uint8(0xFE);
 
-filename = 'tree_blender_file';
+filename = 'teapot';
 % file = "Poisson Disk Samples";
 rawcloud = pcread(['plys/', filename, '.ply']);
 
@@ -39,7 +39,7 @@ pcshow(cloud);
 %% Sample
 
 TOL = 0.5;
-ONCOLOR = [0.8,0.95,1];
+ONCOLOR = [1,1,1];
 OFFCOLOR = [0,0,0];
 
 tt = 0 : RPU : 2*pi - RPU;
@@ -64,13 +64,13 @@ for t = tt
     for r = rr
         for z = zz
             cylXYZ(i, :) = [r*cos(t), r*sin(t), z];
-            points = cloud.findPointsInROI(tolxyz(TOL, cylXYZ(i, :)));
+            points = cloud.findPointsInROI(tolxyz(TOL, cylXY Z(i, :)));
             if(isempty(points))
                 cylCol(i,:) = OFFCOLOR;
             else
-%                 cylCol(i,:) = ONCOLOR;
-                cylCol(i,:) = mean(rawCol(points, :));
-%                 bytecol = uint8(cylCol(i,:) * 255);
+                cylCol(i,:) = ONCOLOR;
+%                 cylCol(i,:) = mean(rawCol(points, :));
+                bytecol = uint8(cylCol(i,:) * 255);
                 fwrite(file, uint8(HEIGHT - z - 1), 'uint8');
                 fwrite(file, uint8(r + 23.5), 'uint8');
                 fwrite(file, uint8(bytecol), 'uint8');

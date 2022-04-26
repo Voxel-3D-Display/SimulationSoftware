@@ -56,13 +56,7 @@ for k = 1:numplys
     
     fwrite(file, uint8(NEXT_FRAME), 'uint8');
     waitbar(k/numplys, framewait, sprintf('Current Frame: %d/%d',k,numplys));
-    
-    bytecolzero = uint8([0,0,0]);
-    for prevenindex = 1:length(prevenpoints) 
-        fwrite(file, uint8(prevenpoints{prevenindex}(1)), 'uint8');
-        fwrite(file, uint8(prevenpoints{prevenindex}(2)), 'uint8');
-        fwrite(file, uint8(bytecolzero), 'uint8');
-    end
+
     
     %% Visualize cloud
 
@@ -90,9 +84,19 @@ for k = 1:numplys
     i = 1;
     sliceidx = 1;
 
-
     for t = tt
         fwrite(file, NEXT_SLICE, 'uint8');
+        
+        if (k ~= 1) 
+            bytecolzero = uint8([0,0,0]);
+            prevensize = size(prevenpoints{sliceidx});
+            for clearpix = 1 : prevensize(1)
+                fwrite(file, uint8(prevenpoints{sliceidx}(clearpix, 1)), 'uint8');
+                fwrite(file, uint8(prevenpoints{sliceidx}(clearpix, 2)), 'uint8');
+                fwrite(file, uint8(bytecolzero), 'uint8');
+            end
+        end
+        
         sliceenpoints = [];
         for r = rr
             for z = zz
@@ -107,7 +111,7 @@ for k = 1:numplys
                     fwrite(file, uint8(HEIGHT - z - 1), 'uint8');
                     fwrite(file, uint8(r + 23.5), 'uint8');
                     fwrite(file, uint8(bytecol), 'uint8');
-                    sliceenpoints = [sliceenpoints;[HEIGHT - z - 1, r + 23.5, bytecol]];
+                    sliceenpoints = [sliceenpoints;[HEIGHT - z - 1, r + 23.5]];
                 end
                 i = i + 1;
             end
@@ -126,15 +130,6 @@ for k = 1:numplys
 
 
     % pcshow(pointCloud(cloud.Location(points,:)));
-end
-
-fwrite(file, uint8(NEXT_FRAME), 'uint8');
-
-bytecolzero = uint8([0,0,0]);
-for prevenindex = 1:length(prevenpoints) 
-    fwrite(file, uint8(prevenpoints{prevenindex}(1)), 'uint8');
-    fwrite(file, uint8(prevenpoints{prevenindex}(2)), 'uint8');
-    fwrite(file, uint8(bytecolzero), 'uint8');
 end
 
 close(wait);

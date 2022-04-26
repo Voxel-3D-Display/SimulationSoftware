@@ -2,7 +2,7 @@ import os
 import pymeshlab
 import shutil
 
-folder_name = "hand"
+folder_name = "voxel"
 # os.chdir(os.path.join(os.getcwd()))
 folder_level = os.getcwd()
 path = os.path.join(os.getcwd(), "stls/" + folder_name)
