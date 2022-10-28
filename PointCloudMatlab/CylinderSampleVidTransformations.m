@@ -9,12 +9,12 @@ UPR = 360;
 DPU = 360/UPR;
 RPU = deg2rad(DPU);
 FRAMERATE = 15000;
-size_perc = 0.6;
+size_perc = 1.0;
 
 NEXT_FRAME = uint8(0xFF);
 NEXT_SLICE = uint8(0xFE);
 
-filename = 'pagoda';
+filename = 'globe';
 % file = "Poisson Disk Samples";
 rawcloud = pcread(['plys/', filename, '.ply']);
 
@@ -22,12 +22,12 @@ rawcloud = pcread(['plys/', filename, '.ply']);
 % rawcloud = pointCloud(xyzPoints);
 
 rawXYZ = rawcloud.Location;
-% T = [1,0,0;0,cosd(90),-sind(90);0,sind(90),cosd(90)];
-% rawXYZ = rawXYZ * T';
+T = [1,0,0;0,cosd(90),-sind(90);0,sind(90),cosd(90)];
+rawXYZ = rawXYZ * T';
 rawXYZ(:,[1,2]) = rawXYZ(:,[1,2]) - [mean(rawcloud.XLimits), mean(rawcloud.YLimits)];
 rawXYZ(:,3) = rawXYZ(:,3) - rawcloud.ZLimits(1);
 diffs = [norm(max(rawXYZ(:,[1,2])) - min(rawXYZ(:,[1,2]))), max(rawXYZ(:,3))];
-rawXYZ = rawXYZ * size_perc*min([WIDTH, HEIGHT] ./ diffs);
+rawXYZ = rawXYZ * size_perc*min([WIDTH, HEIGHT-1] ./ diffs);
 rawCol = single(rawcloud.Color) / 255;
 
 %% Set Keyframes
@@ -35,19 +35,36 @@ rawCol = single(rawcloud.Color) / 255;
 rawXYZ = [rawXYZ,ones(size(rawXYZ,1),1)];
 
 keyframes = {};
-keyframes{end+1} = htmgen(0,0,0,[0,0,0]);
-keyframes{end+1} = htmgen(0,0,24,[0,0,0]);
-keyframes{end+1} = htmgen(0,0,24,[0,0,0]);
-keyframes{end+1} = htmgen(0,0,24,[0,0,0]);
-keyframes{end+1} = htmgen(0,0,0,[0,0,2]);
-keyframes{end+1} = htmgen(0,0,0,[0,0,2]);
-keyframes{end+1} = htmgen(0,0,0,[0,0,2]);
-keyframes{end+1} = htmgen(24,0,0,[0,0,0]);
-keyframes{end+1} = htmgen(24,0,0,[0,0,0]);
-keyframes{end+1} = htmgen(24,0,0,[0,0,0]);
-keyframes{end+1} = htmgen(0,24,0,[0,0,0]);
-keyframes{end+1} = htmgen(0,24,0,[0,0,0]);
-keyframes{end+1} = htmgen(0,24,0,[0,0,0]);
+keyframes{end+1} = htmgen(0,0,12,[0,0,0]);
+keyframes{end+1} = htmgen(0,0,12,[0,0,0]);
+keyframes{end+1} = htmgen(0,0,12,[0,0,0]);
+keyframes{end+1} = htmgen(0,0,12,[0,0,0]);
+keyframes{end+1} = htmgen(0,0,12,[0,0,0]);
+keyframes{end+1} = htmgen(0,0,12,[0,0,0]);
+keyframes{end+1} = htmgen(0,0,12,[0,0,0]);
+keyframes{end+1} = htmgen(0,0,12,[0,0,0]);
+keyframes{end+1} = htmgen(0,0,12,[0,0,0]);
+keyframes{end+1} = htmgen(0,0,12,[0,0,0]);
+keyframes{end+1} = htmgen(0,0,12,[0,0,0]);
+keyframes{end+1} = htmgen(0,0,12,[0,0,0]);
+keyframes{end+1} = htmgen(0,0,12,[0,0,0]);
+keyframes{end+1} = htmgen(0,0,12,[0,0,0]);
+keyframes{end+1} = htmgen(0,0,12,[0,0,0]);
+keyframes{end+1} = htmgen(0,0,12,[0,0,0]);
+keyframes{end+1} = htmgen(0,0,12,[0,0,0]);
+keyframes{end+1} = htmgen(0,0,12,[0,0,0]);
+keyframes{end+1} = htmgen(0,0,12,[0,0,0]);
+keyframes{end+1} = htmgen(0,0,12,[0,0,0]);
+keyframes{end+1} = htmgen(0,0,12,[0,0,0]);
+keyframes{end+1} = htmgen(0,0,12,[0,0,0]);
+keyframes{end+1} = htmgen(0,0,12,[0,0,0]);
+keyframes{end+1} = htmgen(0,0,12,[0,0,0]);
+keyframes{end+1} = htmgen(0,0,12,[0,0,0]);
+keyframes{end+1} = htmgen(0,0,12,[0,0,0]);
+keyframes{end+1} = htmgen(0,0,12,[0,0,0]);
+keyframes{end+1} = htmgen(0,0,12,[0,0,0]);
+keyframes{end+1} = htmgen(0,0,12,[0,0,0]);
+keyframes{end+1} = htmgen(0,0,12,[0,0,0]);
 
 file = fopen(['video_bins/', filename, '.vox'], 'w');
 fwrite(file, uint16(UPR), 'uint16');
@@ -109,8 +126,8 @@ for k = 1:length(keyframes)
                 if(isempty(points))
                     cylCol(i,:) = OFFCOLOR;
                 else
-                    cylCol(i,:) = ONCOLOR;
-    %                 cylCol(i,:) = mean(rawCol(points, :));
+%                     cylCol(i,:) = ONCOLOR;
+                    cylCol(i,:) = mean(rawCol(points, :));
                     bytecol = uint8(cylCol(i,:) * 255);
                     fwrite(file, uint8(HEIGHT - z - 1), 'uint8');
                     fwrite(file, uint8(r + 23.5), 'uint8');

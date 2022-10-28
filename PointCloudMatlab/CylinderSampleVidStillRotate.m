@@ -2,6 +2,9 @@
 
 clear; clc;
 
+DEGREES_BTW = 12;
+NUM_FRAMES = floor(360 / DEGREES_BTW);
+
 HEIGHT = 30;
 WIDTH = 48;
 RLIM = WIDTH/2 - 0.5;
@@ -13,7 +16,7 @@ FRAMERATE = 15000;
 NEXT_FRAME = uint8(0xFF);
 NEXT_SLICE = uint8(0xFE);
 
-filename = 'desklamp';
+filename = 'teapot';
 % file = "Poisson Disk Samples";
 rawcloud = pcread(['plys/', filename, '.ply']);
 
@@ -49,17 +52,19 @@ zz = 0 : HEIGHT - 1;
 cylXYZ = zeros(length(tt)*length(rr)*length(zz), 3);
 cylCol = zeros(length(tt)*length(rr)*length(zz), 3);
 
-i = 1;
-
 wait = waitbar(0, '', 'Name', 'Sweeping through angles');
+
+firstframe = {};
+sliceidx = 1;
+i = 1;
 
 file = fopen(['still_bins/', filename, '.vox'], 'w');
 fwrite(file, uint16(UPR), 'uint16');
 fwrite(file, uint16(FRAMERATE), 'uint16');
-
 fwrite(file, NEXT_FRAME, 'uint8');
 
 for t = tt
+    sliceenpoints = [];
     fwrite(file, NEXT_SLICE, 'uint8');
     for r = rr
         for z = zz
@@ -68,30 +73,69 @@ for t = tt
             if(isempty(points))
                 cylCol(i,:) = OFFCOLOR;
             else
-%                 cylCol(i,:) = ONCOLOR;
-                cylCol(i,:) = mean(rawCol(points, :));
+                cylCol(i,:) = ONCOLOR;
+%                 cylCol(i,:) = mean(rawCol(points, :));
                 bytecol = uint8(cylCol(i,:) * 255);
                 fwrite(file, uint8(HEIGHT - z - 1), 'uint8');
                 fwrite(file, uint8(r + 23.5), 'uint8');
                 fwrite(file, uint8(bytecol), 'uint8');
+                sliceenpoints = [sliceenpoints;[HEIGHT - z - 1, r + 23.5, bytecol]];
             end
             i = i + 1;
         end
     end
-%     clc; t
+    firstframe{sliceidx} = sliceenpoints;
+    sliceidx = sliceidx + 1;
     waitbar(t/max(tt), wait, sprintf('Current Angle: %.04f',t));
 end
-
-fclose(file);
-
 close(wait);
-
-% pcshow(pointCloud(cloud.Location(points,:)));
+fclose(file);
 
 %% Visualize sampled cloud
 
 figure(2);
 pcshow(pointCloud(cylXYZ, 'Color', cylCol), 'MarkerSize', 1);
+
+%% Write rot file
+
+file = fopen(['still_bins/', filename, '-rot', '.vox'], 'w');
+fwrite(file, uint16(UPR), 'uint16');
+fwrite(file, uint16(FRAMERATE), 'uint16');
+
+bytecolzero = uint8([0,0,0]);
+
+wait = waitbar(0, '', 'Name', 'Writing File');
+
+for frame = 0 : NUM_FRAMES - 1
+    waitbar(frame/max(NUM_FRAMES-1), wait, sprintf('Current Frame: %d/%d',frame,(NUM_FRAMES-1)));
+    fwrite(file, NEXT_FRAME, 'uint8');
+    for slice = 0 : UPR-1
+        fwrite(file, NEXT_SLICE, 'uint8');
+        
+        prevsliceidx = mod(slice + (frame-1)*DEGREES_BTW, 360) + 1;
+        sliceidx = mod(slice + frame*DEGREES_BTW, 360) + 1;
+        slicesize = size(firstframe{sliceidx});
+        
+        prevslicesize = size(firstframe{prevsliceidx});
+        for pix = 1 : prevslicesize(1)
+            fwrite(file, uint8(firstframe{prevsliceidx}(pix, 1)), 'uint8');
+            fwrite(file, uint8(firstframe{prevsliceidx}(pix, 2)), 'uint8');
+            fwrite(file, uint8(bytecolzero), 'uint8');
+        end
+        
+        for pix = 1 : slicesize(1)
+            fwrite(file, uint8(firstframe{sliceidx}(pix, 1)), 'uint8');
+            fwrite(file, uint8(firstframe{sliceidx}(pix, 2)), 'uint8');
+            fwrite(file, uint8(firstframe{sliceidx}(pix, 3:5)), 'uint8');
+        end
+    end
+end
+
+close(wait);
+fclose(file);
+
+
+% pcshow(pointCloud(cloud.Location(points,:)));
 
 %% Utility Functions
 
