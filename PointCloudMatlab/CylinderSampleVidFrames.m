@@ -2,9 +2,9 @@
 
 clear; clc;
 
-folder = 'bird';
+folder = 'voxel';
 zoffset = 10;
-size_perc = 0.9;
+size_perc = 0.7;
 
 HEIGHT = 30;
 WIDTH = 48;
@@ -50,7 +50,7 @@ for k = 1:numplys
     % rawXYZ = rawXYZ * T';
     rawXYZ(:,[1,2]) = rawXYZ(:,[1,2]) - xydiff;
     rawXYZ(:,3) = rawXYZ(:,3) - zdiff;
-    rawXYZ = rawXYZ * size_perc*min([WIDTH, HEIGHT] ./ diffs);
+    rawXYZ = rawXYZ * size_perc*min([WIDTH, HEIGHT-1] ./ diffs);
     rawXYZ(:,3) = rawXYZ(:,3) + zoffset;
     rawCol = single(rawcloud.Color) / 255;
     
